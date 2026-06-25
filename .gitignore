@@ -1,0 +1,11 @@
+datasets/
+*.pth
+*.pt
+*.safetensors
+output_models/
+logs/
+eval_results/
+*.log
+__pycache__/
+*.pyc
+.DS_Store

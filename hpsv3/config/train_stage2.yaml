@@ -1,0 +1,159 @@
+# HPSv3++ Stage 2: semi-supervised adaptive training (open-source version, all paths relative)
+# Corresponds to the final method of the HPSv3++ paper: CapabilityEncoder randomly initialized + trainable.
+# The initialization checkpoint load_from_pretrained should be the ckpt produced by Stage 1 (OGD);
+# it can stay null if you only run Stage 2 experiments or run inference directly with the released
+# final weights.
+#
+# Data comes from the open-source released CSV (relative to data_root):
+#   datasets/train/rollout.json        unlabeled rollout (unified long table over the capability + iteration dimensions)
+#   datasets/train/stage2_labeled.json HPDv3++ labeled preference pairs
+#   datasets/train/ogd_std.json        precomputed std (optional, already embedded in the ogd_std column of rollout.json)
+#   datasets/test/test_aes.json       aesthetic test set (new version without overlap)
+#   datasets/test/test_tf.json        instruction-following test set
+
+loss_mode: "adaptive_std"
+model_type: "film_hybrid"
+dataset_type: "mixed_condition"
+condition_mode: "embedding"
+cond_dim: 256
+
+# === CapabilityEncoder (film_hybrid) ===
+freeze_cap_encoder: false
+pretrained_cap_encoder: null
+adaptive_use_predicted_cond: true
+predicted_cond_supervision_weight: 1.5
+predicted_cond_supervision_loss: "smooth_l1"
+
+# === Data (open-source CSV entry) ===
+# data_root is the open-source repo root (containing datasets/, checkpoints/). The image_path in the
+# CSV looks like images/..., and is joined under <data_root>/datasets/. Defaults to the repo root here.
+data_root: "datasets"
+rollout_json: "datasets/train/rollout.json"
+labeled_json: "datasets/train/stage2_labeled.json"
+tiers: ["sd15", "sdxl", "qwen_image"]
+rl_tier: null
+max_rl_step: 1000
+val_size: 500
+max_images_per_group: 6
+
+# === Labeled-data loss ===
+sup_weight: 5.0
+labeled_loss_type: "uncertainty"
+sup_warmup_steps: 0
+
+# === Ranking loss ===
+rank_weight: 2.0
+ranking_loss_type: "bt"
+pairs_per_prompt: 3
+ranking_pair_mode: "cross_model_only"
+
+# === Unsupervised std loss ===
+loss_type: "max_std_unsup"
+std_weight: 1.0
+std_floor: -2.0
+
+# === Adaptive loss ===
+adaptive_weight: 2.0
+adaptive_margin: 0.35
+adaptive_priority_mode: "strong_cap_high_iter"
+warmup_steps: 500
+adaptive_eps: 1.0e-6
+
+# === std constraint: ratio mode ===
+std_constraint_enable: true
+std_constraint_mode: "ratio"
+std_constraint_weight: 0.5
+std_constraint_warmup_steps: 500
+std_bound_min: 0.05
+std_bound_min_gap: 0.06
+std_bound_lower_base: 0.08
+std_bound_lower_cap_coef: 0.08
+std_bound_lower_iter_coef: 0.60
+std_bound_lower_ogd_coef: 0.50
+std_bound_upper_base: 0.35
+std_bound_upper_cap_coef: 0.15
+std_bound_upper_iter_coef: 0.60
+std_bound_upper_ogd_coef: 1.25
+std_target_enable: false
+std_target_weight: 0.0
+
+# === Ratio constraint + Ratio target ===
+std_ratio_constraint_enable: true
+std_ratio_constraint_weight: 3.0
+std_ratio_constraint_warmup_steps: 300
+std_ratio_lower_base: 0.85
+std_ratio_lower_cap_coef: 0.0
+std_ratio_lower_iter_coef: 0.25
+std_ratio_upper_base: 1.15
+std_ratio_upper_cap_coef: 0.0
+std_ratio_upper_iter_coef: 0.45
+std_ratio_min: 0.3
+std_ratio_min_gap: 0.05
+std_ratio_space: "raw"
+
+std_ratio_target_enable: true
+std_ratio_target_weight: 5.0
+std_ratio_target_base: 1.0
+std_ratio_target_cap_coef: 0.0
+std_ratio_target_iter_coef: 0.4
+std_ratio_target_margin_base: 0.1
+std_ratio_target_margin_cap_coef: 0.0
+std_ratio_target_margin_iter_coef: 0.05
+
+# === Model ===
+rm_head_type: "ranknet"
+lora_enable: false
+vision_lora: false
+freeze_vision_tower: true
+freeze_llm: true
+tune_merger: true
+train_rm_head: true
+# backbone: download Qwen3-VL-8B-Instruct from HuggingFace yourself
+model_name_or_path: "Qwen/Qwen3-VL-8B-Instruct"
+# load_from_pretrained is the initialization checkpoint produced by Stage 1 (OGD).
+# - To reproduce the full two-stage training from scratch: first run Stage 1 (OGD) to obtain that ckpt, then fill it in here.
+# - To only run inference/evaluation with our released final weights: use checkpoints/hpsv3++.pth; this field is not needed.
+load_from_pretrained: null
+load_from_pretrained_step: null
+max_pixels: 200704
+min_pixels: 200704
+with_instruction: true
+use_special_tokens: true
+reward_token: "special"
+output_dim: 2
+output_dir: output_models
+
+# === Training parameters ===
+per_device_train_batch_size: 4
+per_device_eval_batch_size: 8
+gradient_accumulation_steps: 1
+num_train_epochs: 2   # the released checkpoint is taken from around epoch 2 (the original run set 3 epochs; we use epoch 2)
+learning_rate: 1.0e-5
+warmup_ratio: 0.05
+lr_scheduler_type: "cosine"
+gradient_checkpointing: true
+gradient_checkpointing_kwargs: {"use_reentrant": false}
+vision_lr: null
+merger_lr: 5.0e-6
+rm_head_lr: null
+special_token_lr: null
+reward_l2_coef: 0.03
+kl_coef: 0.0
+
+# === Evaluation (open-source CSV test sets) ===
+test_json_list:
+  - ["Aesthetic (clean)", "datasets/test/test_aes.json"]
+  - ["PromptFollow (clean)", "datasets/test/test_tf.json"]
+eval_strategy: "steps"
+logging_steps: 10
+eval_steps: 500
+save_steps: 1000
+vis_steps: 200
+report_to: none
+
+bf16: true
+torch_dtype: "bfloat16"
+deepspeed: hpsv3/config/ds_config/zero2.json
+save_only_model: true
+save_full_model: true
+dataloader_num_workers: 2
