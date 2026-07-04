@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # Evaluate pairwise preference accuracy of the HPSv3++ checkpoint on the clean test sets (a single hpsv3++ checkpoint only)
 # Usage: bash eval.sh   (evaluates aes + tf by default)
+#
+# To also evaluate on the HPDv3 test set, download it separately and run:
+#   python evaluate/evaluate.py \
+#       --test_json datasets/test/hpdv3.json \
+#       --config_path hpsv3/config/train_stage2.yaml \
+#       --checkpoint_path checkpoints/hpsv3++.pth \
+#       --img_root datasets --mode pair --batch_size 8 --num_processes 8
 set -euo pipefail
 set -x
 
@@ -13,13 +20,13 @@ cd "$(dirname "$0")"
 CKPT="${CKPT:-checkpoints/hpsv3++.pth}"
 CONFIG="${CONFIG:-hpsv3/config/train_stage2.yaml}"
 NPROC="${NPROC:-8}"
-BATCH="${BATCH:-4}"
+BATCH="${BATCH:-8}"
 IMG_ROOT="${IMG_ROOT:-datasets}"
 
 for tag in aes tf; do
     echo "================== EVAL ${tag} =================="
     python evaluate/evaluate.py \
-        --test_json "datasets/test/${tag}.json" \
+        --test_json "datasets/test/test_${tag}.json" \
         --config_path "${CONFIG}" \
         --checkpoint_path "${CKPT}" \
         --img_root "${IMG_ROOT}" \

@@ -175,7 +175,17 @@ python evaluate/evaluate.py \
     --test_json datasets/test/test_aes.json \
     --config_path hpsv3/config/train_stage2.yaml \
     --checkpoint_path checkpoints/hpsv3++.pth \
-    --img_root datasets --mode pair --batch_size 4 --num_processes 8
+    --img_root datasets --mode pair --batch_size 8 --num_processes 8
+```
+
+To evaluate on the HPDv3 test set (downloaded separately), point `--test_json` to the HPDv3 test file:
+
+```bash
+python evaluate/evaluate.py \
+    --test_json datasets/test/hpdv3.json \
+    --config_path hpsv3/config/train_stage2.yaml \
+    --checkpoint_path checkpoints/hpsv3++.pth \
+    --img_root datasets --mode pair --batch_size 8 --num_processes 8
 ```
 
 The evaluator reports pairwise preference accuracy: a pair is correct when the preferred image (`path1`) receives the higher reward.
