@@ -1,4 +1,4 @@
-# HPSv3++: Scaling Reward Models Across the Full Spectrum of Diffusion Model Capabilities
+# [ACM MM 2026] HPSv3++: Scaling Reward Models Across the Full Spectrum of Diffusion Model Capabilities
 
 HPSv3++ is a **capability-aware and RL-iteration-aware** text-to-image (T2I) reward model. A Capability Encoder implicitly infers the generative ability of the model that produced an image, while the RL iteration step is supplied as an explicit condition. The two signals are jointly modulated through FiLM conditioning, so that a single reward model produces calibrated preference scores across the full spectrum of *generators of differing capability* and *different stages of RL optimization*.
 
