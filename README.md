@@ -1,9 +1,17 @@
 # [ACM MM 2026] HPSv3++: Scaling Reward Models Across the Full Spectrum of Diffusion Model Capabilities
 
-HPSv3++ is a **capability-aware and RL-iteration-aware** text-to-image (T2I) reward model. A Capability Encoder implicitly infers the generative ability of the model that produced an image, while the RL iteration step is supplied as an explicit condition. The two signals are jointly modulated through FiLM conditioning, so that a single reward model produces calibrated preference scores across the full spectrum of *generators of differing capability* and *different stages of RL optimization*.
+**Text-to-image human preference reward model · diffusion model RL fine-tuning · HPDv3++ preference dataset**
+
+HPSv3++ (**HPSv3-PlusPlus**) is a **human preference reward model for text-to-image generation**, with released weights, training code, and evaluation code. Use it to score prompt–image pairs, rank generated images, or provide rewards for reinforcement learning (RL) fine-tuning of diffusion models. It extends HPSv3 with **capability-aware and RL-iteration-aware reward modeling**, addressing changes in preference discrimination as image generators become stronger and their outputs evolve during RL optimization.
+
+This repository accompanies **HPSv3++: Scaling Reward Models Across the Full Spectrum of Diffusion Model Capabilities** (ACM MM 2026). It also provides access to **HPDv3++ (HPDv3-PlusPlus)**, a Qwen-Image preference dataset with separate **text-following / text fidelity** and **aesthetic quality** annotations. Its ready-to-use preference pairs support training and evaluating other image reward models independently of HPSv3++.
+
+**Resources:** [Paper (arXiv:2606.14657)](https://arxiv.org/abs/2606.14657) · [Model weights on Hugging Face](https://huggingface.co/Junjun2333/HPSv3-PlusPlus) · [HPDv3++ dataset on Hugging Face](https://huggingface.co/datasets/Junjun2333/HPDv3-PlusPlus) · [中文简介](#中文简介)
+
+**Get started:** [Install](#1-installation) · [Download weights and data](#2-download-weights-and-dataset) · [Score images](#using-hpsv3-as-a-reward-model) · [Train a reward model](#3-training-two-stages-run-separately) · [Evaluate preferences](#4-inference-and-evaluation)
 
 <p align="center">
-  <img src="assets/showcase.png" width="90%">
+  <img src="assets/showcase.png" width="90%" alt="HPSv3++ text-to-image generation and reward-model showcase">
 </p>
 
 <p align="center">
@@ -15,6 +23,18 @@ HPSv3++ is a **capability-aware and RL-iteration-aware** text-to-image (T2I) rew
 
 ---
 
+## What you can use
+
+| Task | Released resource | Entry point |
+|---|---|---|
+| Human preference scoring and image ranking | HPSv3++ reward-model checkpoint | [Python scoring API](#using-hpsv3-as-a-reward-model) |
+| Train your own aesthetic or text-following reward model | HPDv3++: 191,371 training preference pairs | [Independent dataset splits](#ready-to-use-training-and-test-splits) |
+| Evaluate image preference prediction | HPDv3++: 10,185 test preference pairs across two axes | [Pairwise evaluation](#4-inference-and-evaluation) |
+| Reproduce capability- and iteration-conditioned reward modeling | Two-stage training code and configurations | [Training](#3-training-two-stages-run-separately) |
+| Use the scorer in diffusion model RL fine-tuning | Scoring API with an RL iteration condition | [Reward settings](#using-hpsv3-as-a-reward-model) |
+
+The split counts above describe the released, ready-to-use train/test files. See [release status and limitations](#release-status-and-limitations) for the Flow-GRPO integration and training prerequisites.
+
 ## Repository layout
 
 ```
@@ -25,8 +45,8 @@ HPSv3++ is a **capability-aware and RL-iteration-aware** text-to-image (T2I) rew
 |-- eval.sh                             # Evaluate HPSv3++ on HPDv3++
 |-- checkpoints/
 |   |-- config.json
-|   `-- hpsv3++.pth                      # Weights (17.6 GB), downloaded from HuggingFace
-|-- datasets/                           # HPDv3++ dataset, downloaded from HuggingFace
+|   `-- hpsv3++.pth                      # Weights (17.6 GB), downloaded from Hugging Face
+|-- datasets/                           # HPDv3++ dataset, downloaded from Hugging Face
 |   |-- train/{train_aes,train_tf,stage1_labeled,stage1_ref,stage2_labeled,rollout,ogd_std}.json
 |   |-- test/{test_aes,test_tf}.json
 |   `-- images/                         # Unified image pool (deduplicated)
@@ -43,7 +63,7 @@ HPSv3++ is a **capability-aware and RL-iteration-aware** text-to-image (T2I) rew
 
 HPDv3++ is a two-axis preference dataset built on a frontier generator (Qwen-Image), annotated along **text-following** and **aesthetic quality**. It contains the full set of data used for HPSv3++ two-stage training and evaluation.
 
-<p align="center"><img src="assets/data.png" width="92%"></p>
+<p align="center"><img src="assets/data.png" width="92%" alt="HPDv3++ preference dataset: text fidelity and aesthetic quality annotations"></p>
 
 ### Ready-to-use training and test splits
 
@@ -113,16 +133,19 @@ All data files are **JSON arrays of objects**, one record per element. Fields we
 ## 1. Installation
 
 ```bash
+git clone https://github.com/PlantPotatoOnMoon/HPSv3-PlusPlus.git
+cd HPSv3-PlusPlus
+
 conda create -n hpsv3pp python=3.10 -y
 conda activate hpsv3pp
 pip install -r requirements.txt
 ```
 
-The `Qwen/Qwen3-VL-8B-Instruct` backbone is downloaded automatically from HuggingFace on first run. You may also pre-download it and set `model_name_or_path` in the config to a local path.
+The `Qwen/Qwen3-VL-8B-Instruct` backbone is downloaded automatically from Hugging Face on first run. You may also pre-download it and set `model_name_or_path` in the config to a local path.
 
 ## 2. Download weights and dataset
 
-The HPSv3++ weights and the HPDv3++ dataset are released on HuggingFace and are not stored in this repository. Download them and place them at the repository root.
+The HPSv3++ weights and the HPDv3++ dataset are released on Hugging Face and are not stored in this repository. Download them and place them at the repository root.
 
 - Model weights: [Junjun2333/HPSv3-PlusPlus](https://huggingface.co/Junjun2333/HPSv3-PlusPlus)
 - Dataset (HPDv3++): [Junjun2333/HPDv3-PlusPlus](https://huggingface.co/datasets/Junjun2333/HPDv3-PlusPlus)
@@ -216,22 +239,44 @@ The call above uses no extra arguments, because HPSv3++ handles its two conditio
 **Recommended settings:**
 
 - **General reward / preference scoring and ranking** -- use the default `iter_step=0.0` (the pre-RL setting). Capability is handled automatically, so a single call is all you need.
-- **As the reward inside T2I RL fine-tuning** -- following the setting used in our paper, ramp the iteration condition **linearly from 0.3 to 1.0** over the course of RL training (rather than tying it to the raw step count), so the reward stays calibrated as the policy improves. For example, at progress `p = current_step / total_steps`, pass `iter_step = 0.3 + 0.7 * p`. `iter_step` accepts a scalar (shared across the batch) or a per-sample list / 1-D tensor of length `B`.
+- **As the reward inside T2I RL fine-tuning** -- following the setting used in our paper, ramp the iteration condition **linearly from 0.3 to 1.0** throughout RL training (rather than tying it to the raw step count), so the reward stays calibrated as the policy improves. For example, at progress `p = current_step / total_steps`, pass `iter_step = 0.3 + 0.7 * p`. `iter_step` accepts a scalar (shared across the batch) or a per-sample 1-D tensor of length `B`.
 - Use the **mean** output (`rewards[i][0]`, i.e. mu) as the scalar reward; the second channel is an uncertainty estimate (sigma) and is not used for ranking.
 
 ---
 
 ## Method
 
-<p align="center"><img src="assets/method.png" width="95%"></p>
+### Why condition an image reward model on capability and RL iteration?
+
+A reward model trained on outputs from earlier text-to-image generators can lose preference discrimination when applied to stronger generators or later stages of RL fine-tuning. HPSv3++ studies this **capability–iteration shift** and adapts the reward model along both dimensions.
+
+A **Capability Encoder** infers generative capability from each image. The **RL iteration** is supplied explicitly. The two signals modulate the reward model through **Feature-wise Linear Modulation (FiLM)** conditioning. The released model uses a **Qwen3-VL-8B-Instruct** backbone.
+
+<p align="center"><img src="assets/method.png" width="95%" alt="HPSv3++ two-stage reward-model training with capability and RL-iteration conditioning"></p>
 
 **Stage 1** performs continual learning via Orthogonal Gradient Descent (OGD), extending the reward model to frontier generators without catastrophic forgetting. **Stage 2** is semi-supervised adaptive training that conditions the reward on model capability and RL iteration step through FiLM, supervised by labeled pairs and the within-group std of unlabeled rollouts.
 
 ---
 
-## TODO
+## Relationship to HPSv3 and related work
 
-- [ ] Release the T2I RL fine-tuning code that uses HPSv3++ as the reward model (Flow-GRPO integration, with the 0.3 -> 1.0 iteration-condition schedule).
+HPSv3++ builds on [HPSv3 (Human Preference Score v3)](https://github.com/MizzenAI/HPSv3) and its human preference modeling task. The additions are HPDv3++ preference data from Qwen-Image, continual learning with Orthogonal Gradient Descent, and joint conditioning on generator capability and RL iteration. The HPSv3++ checkpoint and HPDv3++ dataset have their own download links above.
+
+The [paper](https://arxiv.org/abs/2606.14657) evaluates human preference prediction on HPDv3, HPDv3++, and GenAI-Bench, and evaluates diffusion model alignment after RL fine-tuning using GenEval. The [independent preference splits](#ready-to-use-training-and-test-splits) can also be used to study aesthetic assessment and prompt-following evaluation without reproducing the full training method.
+
+## 中文简介
+
+**HPSv3++（HPSv3-PlusPlus）是用于文生图的人类偏好奖励模型**，支持图文对打分、生成图像排序和扩散模型强化学习微调中的奖励计算。方法通过能力编码器推断图像生成器的能力，并显式引入 RL 训练迭代条件，使奖励模型适应更强的生成器和强化学习过程中变化的生成质量。
+
+**HPDv3++（HPDv3-PlusPlus）是基于 Qwen-Image 构建的图像偏好数据集**，分别标注文本遵循能力（文本忠实度）和美学质量。已发布的独立偏好对包含 191,371 对训练数据和 10,185 对测试数据，可用于训练自己的奖励模型，或评测文生图的人类偏好预测能力。
+
+[论文](https://arxiv.org/abs/2606.14657) · [模型权重](https://huggingface.co/Junjun2333/HPSv3-PlusPlus) · [数据集](https://huggingface.co/datasets/Junjun2333/HPDv3-PlusPlus) · [安装与使用](#1-installation)
+
+## Release status and limitations
+
+- **Released:** HPSv3++ model weights, HPDv3++ preference data, two-stage reward-model training code, the scoring API, and pairwise evaluation code.
+- **Pending:** the T2I RL fine-tuning code for the Flow-GRPO integration, including the 0.3 → 1.0 iteration-condition schedule. The scoring API can already supply rewards to an external RL loop.
+- **Full training prerequisites:** Stage 1 requires a separately supplied HPSv3 8B Qwen3-VL initialization checkpoint and original HPDv3 reference images. See [downloads](#2-download-weights-and-dataset) and [training](#3-training-two-stages-run-separately).
 
 ---
 

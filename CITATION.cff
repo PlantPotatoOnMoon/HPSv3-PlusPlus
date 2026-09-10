@@ -1,0 +1,56 @@
+cff-version: 1.2.0
+message: "If you use HPSv3++ or HPDv3++, please cite the paper below."
+type: software
+title: "HPSv3++: Scaling Reward Models Across the Full Spectrum of Diffusion Model Capabilities"
+authors:
+  - family-names: Liu
+    given-names: Yijun
+  - family-names: Huang
+    given-names: Jie
+  - family-names: Xue
+    given-names: Zeyue
+  - family-names: Li
+    given-names: Yuming
+  - family-names: He
+    given-names: Ruizhe
+  - family-names: Li
+    given-names: Haoran
+  - family-names: Ge
+    given-names: Shijia
+  - family-names: Fu
+    given-names: Siming
+repository-code: "https://github.com/PlantPotatoOnMoon/HPSv3-PlusPlus"
+url: "https://arxiv.org/abs/2606.14657"
+keywords:
+  - text-to-image generation
+  - human preference scoring
+  - reward modeling
+  - diffusion models
+  - reinforcement learning
+  - image preference dataset
+  - aesthetic quality
+  - text fidelity
+preferred-citation:
+  type: article
+  title: "HPSv3++: Scaling Reward Models Across the Full Spectrum of Diffusion Model Capabilities"
+  authors:
+    - family-names: Liu
+      given-names: Yijun
+    - family-names: Huang
+      given-names: Jie
+    - family-names: Xue
+      given-names: Zeyue
+    - family-names: Li
+      given-names: Yuming
+    - family-names: He
+      given-names: Ruizhe
+    - family-names: Li
+      given-names: Haoran
+    - family-names: Ge
+      given-names: Shijia
+    - family-names: Fu
+      given-names: Siming
+  journal: arXiv
+  year: 2026
+  doi: "10.48550/arXiv.2606.14657"
+  url: "https://arxiv.org/abs/2606.14657"
