@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use HPSv3++ or HPDv3++, please cite the paper below."
 type: software
-title: "HPSv3++: Scaling Reward Models Across the Full Spectrum of Diffusion Model Capabilities"
+title: "HPSv3++ and HPDv3++: Reward Model and Human Preference Dataset"
 authors:
   - family-names: Liu
     given-names: Yijun
@@ -22,6 +22,9 @@ authors:
 repository-code: "https://github.com/PlantPotatoOnMoon/HPSv3-PlusPlus"
 url: "https://arxiv.org/abs/2606.14657"
 keywords:
+  - HPDv3++
+  - human preference dataset
+  - image preference benchmark
   - text-to-image generation
   - human preference scoring
   - reward modeling
