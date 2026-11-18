@@ -18,6 +18,7 @@
 ## 📰 News
 
 - 🤝 **2026-09** — **[SenseNova-U1.5](https://github.com/OpenSenseNova/SenseNova-U1)** uses **HPSv3++** as a preference reward for RL post-training. See its [technical report (§3.3)](https://github.com/OpenSenseNova/SenseNova-U1/blob/main/docs/pdf/SenseNOVA_U1_5.pdf#page=12).
+- 🤝 **2026-07** — **[SANA-Video 2.0](https://github.com/NVlabs/Sana/blob/main/docs/sana_video2.md)** uses **HPSv3++** as a reward for online RL post-training (ReFL). See its [paper (§4.4.2)](https://arxiv.org/html/2607.21553v1#S4.SS4.SSS2).
 - 🎉 **2026-07** — **HPSv3++** is accepted to **ACM Multimedia 2026 (ACM MM 2026)**!
 - 🚀 **2026-06** — Released **HPSv3++**, **HPDv3++**, and training/evaluation code, with [reward-model support for **Flow-GRPO**](#using-hpsv3-as-a-reward-model).
 
